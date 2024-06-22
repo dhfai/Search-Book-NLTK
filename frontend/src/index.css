@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer base {
+    :root {
+        --background: 34 40 49;
+        --foreground: 53 50 82;
+        --card-bg: #2b333d;
+        --muted: 115 115 115;
+        --accent: 134 68 162;
+        --foreground-color: rgb(94, 92, 127);
+        --background-color: rgb(248, 247, 253);
+        --container-color: rgb(255, 255, 255);
+        --primary-color: rgb(255, 107, 77);
+        --primary-bg: #ff985c4d;
+        --title-color: rgb(53, 50, 82);
+        --text-color: rgb(94, 92, 127);
+        --text-secondary: rgb(133, 131, 165);
+        --stroke-color: 62 68 78;
+    }
+
+    @font-face {
+        font-family: 'DM Sans';
+        src: url('/public/font/DMSans-Regular.ttf') format('truetype');
+    }
+}
+
+
+
+html {
+    scroll-behavior: smooth;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    letter-spacing: .3px;
+}
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'DM Sans', sans-serif;
+    background-color: rgb(var(--background));
+    color: rgb(var(--foreground));
+    overflow-x: hidden;
+}
+
+
+::-webkit-scrollbar {
+    width: 2px;
+}
+
+
+::-webkit-scrollbar-track {
+    background-color: rgba(0, 0, 0, 0.438);
+}
+
+
+::-webkit-scrollbar-thumb {
+    background-color: #888;
+    border-radius: 6px;
+}
+
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #555;
+}
