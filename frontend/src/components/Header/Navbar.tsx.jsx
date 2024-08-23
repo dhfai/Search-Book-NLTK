@@ -10,7 +10,7 @@ export const Navbar = () => {
         >
             <div className="container mx-auto flex justify-between items-center">
                 <a href='/' className="text-white font-dm font-bold">
-                    E-<span className={"text-blue-500"}>Teman</span>
+                    E-<span className={"text-blue-500"}>SEARCH</span>
                 </a>
                 <SearchInput />
             </div>

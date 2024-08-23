@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export const DetailCard = ({ judul, abstrak, penulis, jmlHal, categorie, img, harga, handleCloseDetail }) => {
+export const DetailCard = ({ judul, abstrak, img, handleCloseDetail }) => {
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -13,18 +13,17 @@ export const DetailCard = ({ judul, abstrak, penulis, jmlHal, categorie, img, ha
                 initial={{ y: -100 }}
                 animate={{ y: 0 }}
                 transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                // className="relative h-screen shadow-lg overflow-y-scroll"
-                className="relative h-screen shadow-lg overflow-y-scroll bg-opacity-80 bg-black"
+                className="relative max-w-lg w-full bg-opacity-80 bg-black rounded-lg shadow-lg overflow-hidden"
                 style={{
                     backdropFilter: 'blur(10px)',
                     WebkitBackdropFilter: 'blur(10px)',
                 }}
             >
-                <div className="flex justify-between items-center px-20 p-4">
+                <div className="flex justify-between items-center px-6 py-4 border-b border-gray-600">
                     <h5 className="text-xl font-semibold text-gray-300">{judul}</h5>
                     <button
                         onClick={handleCloseDetail}
-                        className="text-gray-700 hover:text-gray-300"
+                        className="text-gray-300 hover:text-gray-500"
                     >
                         <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"
                              xmlns="http://www.w3.org/2000/svg">
@@ -36,17 +35,14 @@ export const DetailCard = ({ judul, abstrak, penulis, jmlHal, categorie, img, ha
                         </svg>
                     </button>
                 </div>
-                <div className="flex flex-col items-center justify-center">
+                <div className="flex flex-col items-center p-6">
                     <img
-                        className="object-cover object-center w-[150px] rounded-lg"
+                        className="object-cover object-center w-48 h-48 rounded-lg"
                         src={img}
                         alt={judul}
                     />
-                    <div className="mt-4 px-20 pb-5">
-                        <p className="text-gray-300 font-bold mt-2">Penulis: {penulis}</p>
-                        <p className="text-gray-300 font-bold">Jumlah Halaman: {jmlHal}</p>
-                        <p className="text-gray-300 font-bold">Kategori: {categorie}</p>
-                        <p className="text-gray-300 mt-2 text-justify">{abstrak}</p>
+                    <div className="mt-4">
+                        <p className="text-gray-300 text-justify">{abstrak}</p>
                     </div>
                 </div>
             </motion.div>

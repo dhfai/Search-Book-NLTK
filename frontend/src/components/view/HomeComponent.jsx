@@ -20,7 +20,7 @@ export const HomeComponent = () => {
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 p-4"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-5 gap-4 p-4"
         >
             {books && books.map((book) => (
                 <CardItem
@@ -28,10 +28,6 @@ export const HomeComponent = () => {
                     id={book.id}
                     judul={book.judul}
                     abstrak={book.abstrak}
-                    penulis={book.penulis}
-                    jmlHal={book.jmlHal}
-                    categorie={book.categorie}
-                    penerbit={book.penerbit}
                     img={book.img}
                 />
             ))}

@@ -1,13 +1,17 @@
 from flask import Flask, request, jsonify
 import nltk
 import json
+import mysql.connector
 from flask_cors import CORS
 from spellchecker import SpellChecker
+
+# Unduh resource "punkt" untuk tokenisasi
+nltk.download('punkt')
 
 app = Flask(__name__)
 CORS(app)
 
-
+# Load custom words for spell checker
 def load_custom_words(filename):
     with open(filename, 'r', encoding='utf-8') as file:
         data = json.load(file)
@@ -26,23 +30,11 @@ custom_words = load_custom_words('dict.json')
 spell = SpellChecker()
 spell.word_frequency.load_words(custom_words)
 
+# Load synonyms dictionary
 def load(filename):
     with open(filename) as data_file:
         data = json.load(data_file)
     return data
-
-def loadBuku(filename, encoding='utf-8'):
-    with open(filename, encoding=encoding) as data_file:
-        data = json.load(data_file)
-    return data["buku"]
-
-def tokenize(text):
-    return nltk.word_tokenize(text.lower())
-
-def jaccard_similarity(tokens1, tokens2):
-    intersection = set(tokens1) & set(tokens2)
-    union = set(tokens1) | set(tokens2)
-    return len(intersection) / len(union)
 
 synonyms_dict = load('dict.json')
 
@@ -53,15 +45,53 @@ def get_synonyms(word):
         return []
 
 def check_spelling(word):
+    # Correct the spelling
     corrected_word = spell.correction(word)
 
+    # Check if the correction differs from the original word
     if corrected_word != word:
         print(f"Kata '{word}' salah eja. Diduga maksud Anda '{corrected_word}'")
+    else:
+        print(f"Tidak ada koreksi untuk kata '{word}'.")
+
     return corrected_word
+
+# Tokenize text
+def tokenize(text):
+    return nltk.word_tokenize(text.lower())
+
+# Calculate Jaccard similarity
+def jaccard_similarity(tokens1, tokens2):
+    intersection = set(tokens1) & set(tokens2)
+    union = set(tokens1) | set(tokens2)
+    return len(intersection) / len(union)
+
+# Connect to MySQL database
+def get_db_connection():
+    return mysql.connector.connect(
+        host="if.unismuh.ac.id",
+        user="root",
+        port="3388",
+        password="mariabelajar",
+        database="perpus"
+    )
+
+# Retrieve book data from MySQL
+def get_books_from_db():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    
+    cursor.execute("SELECT ID as id, Title AS judul, CoverURL AS img, Description AS abstrak FROM indonesian_books")
+    books = cursor.fetchall()
+    
+    cursor.close()
+    connection.close()
+    
+    return books
 
 @app.route('/list', methods=['GET'])
 def list_books():
-    data_buku = loadBuku('buku.json')
+    data_buku = get_books_from_db()
     return jsonify(data_buku if data_buku else {"error": "Data not found"})
 
 @app.route('/search', methods=['GET'])
@@ -71,27 +101,27 @@ def search_books():
     if not keyword:
         return jsonify({"error": "Missing 'keyword' parameter"}), 400
 
-    # Cek dan perbaiki typo pada keyword
+    # Check and correct spelling
     corrected_keyword = check_spelling(keyword)
     
-    # Tokenisasi kata kunci
+    # Tokenize the corrected keyword
     tokenized_keyword = tokenize(corrected_keyword)
     
-    # Load data buku
-    data_buku = loadBuku('buku.json')
+    # Load book data from the database
+    data_buku = get_books_from_db()
     
-    # Tokenisasi judul dan abstrak buku
+    # Tokenize book titles and abstracts
     tokenized_judul_buku = [tokenize(buku["judul"]) for buku in data_buku]
     tokenized_abstrak_buku = [tokenize(buku["abstrak"]) for buku in data_buku]
     
-    # Hitung skor kesamaan menggunakan Jaccard Similarity
+    # Calculate Jaccard similarity score
     skor_kesamaan_judul = [jaccard_similarity(judul, tokenized_keyword) for judul in tokenized_judul_buku]
     skor_kesamaan_abstrak = [jaccard_similarity(abstrak, tokenized_keyword) for abstrak in tokenized_abstrak_buku]
     
-    # Gabungkan skor kesamaan judul dan abstrak
+    # Combine title and abstract similarity scores
     skor_kesamaan_gabungan = [skor_judul + skor_abstrak for skor_judul, skor_abstrak in zip(skor_kesamaan_judul, skor_kesamaan_abstrak)]
     
-    # Menyusun data buku berdasarkan skor kesamaan
+    # Sort and filter relevant books based on similarity score
     relevant_books = [
         {
             "judul": buku["judul"],
@@ -101,11 +131,11 @@ def search_books():
         } for buku, skor in zip(data_buku, skor_kesamaan_gabungan) if skor > 0
     ]
     
-    # Log untuk debugging
+    # Log for debugging
     print("Mengirimkan data berikut ke frontend:")
     print(relevant_books)
 
-    # Mengembalikan hasil dengan correctedKeyword jika ada koreksi
+    # Return results along with correctedKeyword if there was a correction
     return jsonify({
         "correctedKeyword": corrected_keyword if corrected_keyword != keyword else None,
         "data": sorted(relevant_books, key=lambda x: x["skor_kesamaan"], reverse=True)
