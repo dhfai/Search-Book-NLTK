@@ -9,11 +9,11 @@ export const HomeComponent = () => {
 
     useEffect(() => {
         BookDataFetch().then((res) => {
-            // res.data.forEach((book) => {
-            //     book.abstrak = book.abstrak.split(' ').slice(0, 20).join(' ') + '...';
-            // });
+            res.data.forEach((book) => {
+                book.abstrak = book.abstrak.split(' ').slice(0, 20).join(' ') + '...';
+            });
             setBooks(res.data);
-        });
+        }); 
     }, []);
 
     return (

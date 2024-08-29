@@ -44,17 +44,34 @@ def get_synonyms(word):
     else:
         return []
 
-def check_spelling(word):
-    # Correct the spelling
-    corrected_word = spell.correction(word)
+def check_spelling(phrase):
+    if not phrase:  # Handle empty input
+        return phrase
 
-    # Check if the correction differs from the original word
-    if corrected_word != word:
-        print(f"Kata '{word}' salah eja. Diduga maksud Anda '{corrected_word}'")
+    # Tokenize the phrase into individual words
+    words = tokenize(phrase)
+
+    corrected_words = []
+    for word in words:
+        # Correct the spelling of each word
+        corrected_word = spell.correction(word)
+
+        # If correction is None, use the original word
+        if corrected_word is None:
+            corrected_word = word
+        
+        corrected_words.append(corrected_word)
+
+    # Join the corrected words back into a phrase
+    corrected_phrase = ' '.join(corrected_words)
+
+    # Log the correction for debugging
+    if corrected_phrase != phrase:
+        print(f"Kata '{phrase}' salah eja. Diduga maksud Anda '{corrected_phrase}'")
     else:
-        print(f"Tidak ada koreksi untuk kata '{word}'.")
+        print(f"Tidak ada koreksi untuk frasa '{phrase}'.")
 
-    return corrected_word
+    return corrected_phrase
 
 # Tokenize text
 def tokenize(text):
@@ -104,7 +121,11 @@ def search_books():
     # Check and correct spelling
     corrected_keyword = check_spelling(keyword)
     
-    # Tokenize the corrected keyword
+    # Jika tidak ada koreksi atau pengoreksian gagal, lanjutkan dengan keyword asli
+    if corrected_keyword is None:
+        corrected_keyword = keyword
+
+    # Tokenize the corrected keyword (for checking individual words)
     tokenized_keyword = tokenize(corrected_keyword)
     
     # Load book data from the database
@@ -114,14 +135,22 @@ def search_books():
     tokenized_judul_buku = [tokenize(buku["judul"]) for buku in data_buku]
     tokenized_abstrak_buku = [tokenize(buku["abstrak"]) for buku in data_buku]
     
-    # Calculate Jaccard similarity score
-    skor_kesamaan_judul = [jaccard_similarity(judul, tokenized_keyword) for judul in tokenized_judul_buku]
-    skor_kesamaan_abstrak = [jaccard_similarity(abstrak, tokenized_keyword) for abstrak in tokenized_abstrak_buku]
-    
-    # Combine title and abstract similarity scores
-    skor_kesamaan_gabungan = [skor_judul + skor_abstrak for skor_judul, skor_abstrak in zip(skor_kesamaan_judul, skor_kesamaan_abstrak)]
-    
-    # Sort and filter relevant books based on similarity score
+    # Calculate Jaccard similarity score for each token in keyword
+    skor_kesamaan_gabungan = []
+
+    for judul_tokens, abstrak_tokens in zip(tokenized_judul_buku, tokenized_abstrak_buku):
+        # Calculate Jaccard similarity for each token in the keyword
+        skor_kesamaan_judul = [jaccard_similarity(judul_tokens, [token]) for token in tokenized_keyword]
+        skor_kesamaan_abstrak = [jaccard_similarity(abstrak_tokens, [token]) for token in tokenized_keyword]
+        
+        # Average the similarity scores for title and abstract
+        skor_judul = sum(skor_kesamaan_judul) / len(tokenized_keyword)
+        skor_abstrak = sum(skor_kesamaan_abstrak) / len(tokenized_keyword)
+        
+        # Combine title and abstract similarity scores
+        skor_kesamaan_gabungan.append(skor_judul + skor_abstrak)
+
+    # Sort and filter relevant books based on combined similarity score
     relevant_books = [
         {
             "judul": buku["judul"],
@@ -140,6 +169,7 @@ def search_books():
         "correctedKeyword": corrected_keyword if corrected_keyword != keyword else None,
         "data": sorted(relevant_books, key=lambda x: x["skor_kesamaan"], reverse=True)
     })
+
 
 if __name__ == '__main__':
     app.run(debug=True)

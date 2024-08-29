@@ -14,7 +14,7 @@ function App() {
     <Router>
         <Layout>
             <Routes>
-                <Route path="/home" element={<Home />} />
+                <Route path="/" element={<Home />} />
                 <Route path="/search" element={<SearchPage />} />
             </Routes>
         </Layout>
